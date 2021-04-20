@@ -19,7 +19,11 @@ function BenchContext(app, config) {
     self.runTask = function(cmd, title) {
         if (title) app.log(title);
 
-        const { stdout, stderr, code } = shell.exec(cmd, { silent: true });
+        let silent = true;
+        if (process.env.SILENT == 'false') {
+            silent = false;
+        }
+        const { stdout, stderr, code } = shell.exec(cmd, { silent });
         var error = false;
 
         if (code != 0) {
@@ -97,7 +101,7 @@ async function benchBranch(app, config) {
         var { error, stderr } = benchContext.runTask(`git reset --hard origin/${config.baseBranch}`, `Resetting ${config.baseBranch} hard...`);
         if (error) return errorResult(stderr);
 
-        benchConfig.preparationCommand && benchContext.runTask(benchConfig.preparationCommand);
+        benchConfig.preparationCommand && benchContext.runTask(benchConfig.preparationCommand, 'Preparing...');
 
         var { stderr, error, stdout } = benchContext.runTask(benchConfig.branchCommand, `Benching ${config.baseBranch}... (${benchConfig.branchCommand})`);
         if (error) return errorResult(stderr);
@@ -254,6 +258,110 @@ var PolkadotRuntimeBenchmarkConfigs = {
     }
 }
 
+/**
+ * {
+ *      [task]: {
+ *          title: "task string",
+ *          preparationCommand: "any setup command before benchmark",
+ *          branchCommand: "benchmark command"
+ *      }
+ * }
+ */
+var SetheumRuntimeBenchmarkConfigs = {
+    "module": {
+        title: "Benchmark Runtime Module",
+        preparationCommand: "make init",
+        branchCommand: [
+            'cargo run --release',
+            '--bin=setheum',
+            '--features=runtime-benchmarks',
+            '--',
+            'benchmark',
+            '--chain=dev',
+            '--steps=50',
+            '--repeat=20',
+            '--pallet={pallet_name}',
+            '--extrinsic="*"',
+            '--execution=wasm',
+            '--wasm-execution=compiled',
+            '--heap-pages=4096',
+            '--output=./modules/{pallet_folder}/src/weights.rs',
+            '--template=./templates/module-weight-template.hbs',
+        ].join(' '),
+    },
+    "setheum": {
+        title: "Benchmark Runtime Seheum Module",
+        preparationCommand: "make init",
+        branchCommand: [
+            'cargo run --release',
+            '--bin=setheum',
+            '--features=runtime-benchmarks',
+            '--features=with-setheum-runtime',
+            '--',
+            'benchmark',
+            '--chain=setheum-latest',
+            '--steps=50',
+            '--repeat=20',
+            '--pallet={pallet_name}',
+            '--extrinsic="*"',
+            '--execution=wasm',
+            '--wasm-execution=compiled',
+            '--heap-pages=4096',
+            '--header=./HEADER-GPL3',
+            '--output=./runtime/setheum/src/weights/',
+        ].join(' '),
+    },
+    "neom": {
+        title: "Benchmark Runtime Neom Module",
+        preparationCommand: "make init",
+        branchCommand: [
+            'cargo run --release',
+            '--bin=setheum',
+            '--features=runtime-benchmarks',
+            '--features=with-neom-runtime',
+            '--',
+            'benchmark',
+            '--chain=neom-latest',
+            '--steps=50',
+            '--repeat=20',
+            '--pallet={pallet_name}',
+            '--extrinsic="*"',
+            '--execution=wasm',
+            '--wasm-execution=compiled',
+            '--heap-pages=4096',
+            '--header=./HEADER-GPL3',
+            '--output=./runtime/neom/src/weights/',
+        ].join(' '),
+    },
+    "newrome": {
+        title: "Benchmark Runtime NewRome Module",
+        preparationCommand: "make init",
+        branchCommand: [
+            'cargo run --release',
+            '--bin=setheum',
+            '--features=runtime-benchmarks',
+            '--features=with-newrome-runtime',
+            '--',
+            'benchmark',
+            '--chain=dev',
+            '--steps=50',
+            '--repeat=20',
+            '--pallet={pallet_name}',
+            '--extrinsic="*"',
+            '--execution=wasm',
+            '--wasm-execution=compiled',
+            '--heap-pages=4096',
+            '--header=./HEADER-GPL3',
+            '--output=./runtime/newrome/src/weights/',
+        ].join(' '),
+    },
+    "custom": {
+        title: "Benchmark Runtime Custom",
+        preparationCommand: "make init",
+        branchCommand: 'cargo run --release --bin setheum --features runtime-benchmarks -- benchmark',
+    }
+}
+
 function checkRuntimeBenchmarkCommand(command) {
     let required = ["benchmark", "--pallet", "--extrinsic", "--execution", "--wasm-execution", "--steps", "--repeat", "--chain"];
     let missing = [];
@@ -287,13 +395,19 @@ async function benchmarkRuntime(app, config) {
             return errorResult(`Incomplete command.`)
         }
 
-        let command = config.extra.split(" ")[0];
+        // Capture `<task>` in `<task> <extra>`
+        let [task, ...rest] = config.extra.split(" ");
+
+        // Rest is `<extra>`
+        var extra = rest.join(" ").trim();
 
         var benchConfig;
-        if (config.repo == "substrate") {
-            benchConfig = SubstrateRuntimeBenchmarkConfigs[command];
-        } else if (config.repo == "polkadot") {
-            benchConfig = PolkadotRuntimeBenchmarkConfigs[command];
+        if (config.repo === "substrate") {
+            benchConfig = SubstrateRuntimeBenchmarkConfigs[task];
+        } else if (config.repo === "polkadot") {
+            benchConfig = PolkadotRuntimeBenchmarkConfigs[task];
+        } else if (config.repo.toLowerCase() === "setheum") {
+            benchConfig = SetheumRuntimeBenchmarkConfigs[task];
         } else {
             return errorResult(`${config.repo} repo is not supported.`)
         }
@@ -306,7 +420,7 @@ async function benchmarkRuntime(app, config) {
 
         // Append extra flags to the end of the command
         let branchCommand = benchConfig.branchCommand;
-        if (command == "custom") {
+        if (task == "custom") {
             // extra here should just be raw arguments to add to the command
             branchCommand += " " + extra;
         } else {
@@ -327,7 +441,7 @@ async function benchmarkRuntime(app, config) {
 
         var benchContext = new BenchContext(app, config);
         console.log(`Started runtime benchmark "${benchConfig.title}."`);
-        shell.mkdir("git")
+        shell.mkdir("-p", "git")
         shell.cd(cwd + "/git")
 
         var { error } = benchContext.runTask(`git clone https://github.com/${config.owner}/${config.repo}`, "Cloning git repository...");
@@ -349,13 +463,13 @@ async function benchmarkRuntime(app, config) {
         var { error, stderr } = benchContext.runTask(`git reset --hard origin/${config.branch}`, `Resetting ${config.branch} hard...`);
         if (error) return errorResult(stderr);
 
-        benchConfig.preparationCommand && benchContext.runTask(benchConfig.preparationCommand);
+        benchConfig.preparationCommand && benchContext.runTask(benchConfig.preparationCommand, 'Preparing...');
 
         // Merge master branch
         var { error, stderr } = benchContext.runTask(`git merge origin/${config.baseBranch}`, `Merging branch ${config.baseBranch}`);
         if (error) return errorResult(stderr, "merge");
         if (config.pushToken) {
-            benchContext.runTask(`git push https://${config.pushToken}@github.com/paritytech/${config.repo}.git HEAD`, `Pushing merge with pushToken.`);
+            benchContext.runTask(`git push https://${config.pushToken}@github.com/${config.owner}/${config.repo}.git HEAD`, `Pushing merge with pushToken.`);
         } else {
             benchContext.runTask(`git push`, `Pushing merge.`);
         }
@@ -369,7 +483,7 @@ async function benchmarkRuntime(app, config) {
             benchContext.runTask(`git add ${path}`, `Adding new files.`);
             benchContext.runTask(`git commit -m "${branchCommand}"`, `Committing changes.`);
             if (config.pushToken) {
-                benchContext.runTask(`git push https://${config.pushToken}@github.com/paritytech/${config.repo}.git HEAD`, `Pushing commit with pushToken.`);
+                benchContext.runTask(`git push https://${config.pushToken}@github.com/${config.owner}/${config.repo}.git HEAD`, `Pushing commit with pushToken.`);
             } else {
                 benchContext.runTask(`git push`, `Pushing commit.`);
             }
