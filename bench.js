@@ -406,8 +406,8 @@ async function benchmarkRuntime(app, config) {
             benchConfig = SubstrateRuntimeBenchmarkConfigs[task];
         } else if (config.repo === "polkadot") {
             benchConfig = PolkadotRuntimeBenchmarkConfigs[task];
-        } else if (config.repo.toLowerCase() === "acala") {
-            benchConfig = AcalaRuntimeBenchmarkConfigs[task];
+        } else if (config.repo.toLowerCase() === "setheum") {
+            benchConfig = SetheumRuntimeBenchmarkConfigs[task];
         } else {
             return errorResult(`${config.repo} repo is not supported.`)
         }
