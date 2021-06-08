@@ -17,7 +17,15 @@ function BenchContext(app, config) {
     self.config = config;
 
     self.runTask = function(cmd, title) {
+        const secrets = [
+            self.config.pushToken
+        ].filter(Boolean);
+
         if (title) app.log(title);
+
+        const redacted = secrets.reduce((x, s) => x.replaceAll(s, '***'), cmd);
+
+        app.log(redacted);
 
         let silent = true;
         if (process.env.SILENT == 'false') {
@@ -27,8 +35,7 @@ function BenchContext(app, config) {
         var error = false;
 
         if (code != 0) {
-            app.log(`ops.. Something went wrong (error code ${code})`);
-            app.log(`stderr: ${stderr}`);
+            app.log(`Error code ${code}: ${stderr}`);
             error = true;
         }
 
@@ -93,6 +100,9 @@ async function benchBranch(app, config) {
         var { error, stderr } = benchContext.runTask(`git fetch`, "Doing git fetch...");
         if (error) return errorResult(stderr);
 
+        var { error, stderr } = benchContext.runTask(`git submodule update --init`);
+        if (error) return errorResult(stderr);
+
         var { error, stderr } = benchContext.runTask(`git checkout ${config.baseBranch}`, `Checking out ${config.baseBranch}...`);
         if (error) {
             app.log("Git checkout failed, probably some dirt in directory... Will continue with git reset.");
@@ -119,11 +129,9 @@ async function benchBranch(app, config) {
         report = `Benchmark: **${benchConfig.title}**\n\n` + report;
 
         return report;
-    }
-    catch (error) {
+    } catch (error) {
         return errorResult(error.toString());
-    }
-    finally {
+    } finally {
         release();
     }
 }
@@ -270,7 +278,6 @@ var PolkadotRuntimeBenchmarkConfigs = {
 var SetheumRuntimeBenchmarkConfigs = {
     "module": {
         title: "Benchmark Runtime Module",
-        preparationCommand: "make init",
         branchCommand: [
             'cargo run --release',
             '--bin=setheum',
@@ -291,7 +298,6 @@ var SetheumRuntimeBenchmarkConfigs = {
     },
     "setheum": {
         title: "Benchmark Runtime Seheum Module",
-        preparationCommand: "make init",
         branchCommand: [
             'cargo run --release',
             '--bin=setheum',
@@ -313,7 +319,6 @@ var SetheumRuntimeBenchmarkConfigs = {
     },
     "neom": {
         title: "Benchmark Runtime Neom Module",
-        preparationCommand: "make init",
         branchCommand: [
             'cargo run --release',
             '--bin=setheum',
@@ -335,7 +340,6 @@ var SetheumRuntimeBenchmarkConfigs = {
     },
     "newrome": {
         title: "Benchmark Runtime NewRome Module",
-        preparationCommand: "make init",
         branchCommand: [
             'cargo run --release',
             '--bin=setheum',
@@ -357,7 +361,6 @@ var SetheumRuntimeBenchmarkConfigs = {
     },
     "custom": {
         title: "Benchmark Runtime Custom",
-        preparationCommand: "make init",
         branchCommand: 'cargo run --release --bin setheum --features runtime-benchmarks -- benchmark',
     }
 }
@@ -463,6 +466,10 @@ async function benchmarkRuntime(app, config) {
         var { error, stderr } = benchContext.runTask(`git reset --hard origin/${config.branch}`, `Resetting ${config.branch} hard...`);
         if (error) return errorResult(stderr);
 
+        var { error, stderr } = benchContext.runTask(`git submodule update --init`);
+        if (error) return errorResult(stderr);
+
+
         benchConfig.preparationCommand && benchContext.runTask(benchConfig.preparationCommand, 'Preparing...');
 
         // Merge master branch
@@ -488,18 +495,16 @@ async function benchmarkRuntime(app, config) {
                 benchContext.runTask(`git push`, `Pushing commit.`);
             }
         }
-        let report = `Benchmark: **${benchConfig.title}**\n\n`
-            + branchCommand
-            + "\n\n<details>\n<summary>Results</summary>\n\n"
-            + (stdout ? stdout : stderr)
-            + "\n\n </details>";
+        let report = `Benchmark: **${benchConfig.title}**\n\n` +
+            branchCommand +
+            "\n\n<details>\n<summary>Results</summary>\n\n" +
+            (stdout ? stdout : stderr) +
+            "\n\n </details>";
 
         return report;
-    }
-    catch (error) {
+    } catch (error) {
         return errorResult(error.toString());
-    }
-    finally {
+    } finally {
         release();
     }
 }
