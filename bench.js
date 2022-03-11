@@ -129,9 +129,11 @@ async function benchBranch(app, config) {
         report = `Benchmark: **${benchConfig.title}**\n\n` + report;
 
         return report;
-    } catch (error) {
+    }
+    catch (error) {
         return errorResult(error.toString());
-    } finally {
+    }
+    finally {
         release();
     }
 }
@@ -276,12 +278,13 @@ var PolkadotRuntimeBenchmarkConfigs = {
  * }
  */
 var SetheumRuntimeBenchmarkConfigs = {
-    "module": {
+    "core-module": {
         title: "Benchmark Runtime Module",
         branchCommand: [
-            'cargo run --release',
-            '--bin=setheum',
+            'cargo run --release --color=never',
+            '--bin=setheum-node',
             '--features=runtime-benchmarks',
+            '--features=with-ethereum-compatibility',
             '--',
             'benchmark',
             '--chain=dev',
@@ -292,20 +295,209 @@ var SetheumRuntimeBenchmarkConfigs = {
             '--execution=wasm',
             '--wasm-execution=compiled',
             '--heap-pages=4096',
-            '--output=./modules/{pallet_folder}/src/weights.rs',
+            '--output=./lib-serml/core/{pallet_folder}/src/weights.rs',
+            '--template=./templates/module-weight-template.hbs',
+        ].join(' '),
+    },
+    "oracle-module": {
+        title: "Benchmark Runtime Module",
+        branchCommand: [
+            'cargo run --release --color=never',
+            '--bin=setheum-node',
+            '--features=runtime-benchmarks',
+            '--features=with-ethereum-compatibility',
+            '--',
+            'benchmark',
+            '--chain=dev',
+            '--steps=50',
+            '--repeat=20',
+            '--pallet={pallet_name}',
+            '--extrinsic="*"',
+            '--execution=wasm',
+            '--wasm-execution=compiled',
+            '--heap-pages=4096',
+            '--output=./lib-serml/core/oracle/{pallet_folder}/src/weights.rs',
+            '--template=./templates/module-weight-template.hbs',
+        ].join(' '),
+    },
+    "tokens-module": {
+        title: "Benchmark Runtime Module",
+        branchCommand: [
+            'cargo run --release --color=never',
+            '--bin=setheum-node',
+            '--features=runtime-benchmarks',
+            '--features=with-ethereum-compatibility',
+            '--',
+            'benchmark',
+            '--chain=dev',
+            '--steps=50',
+            '--repeat=20',
+            '--pallet={pallet_name}',
+            '--extrinsic="*"',
+            '--execution=wasm',
+            '--wasm-execution=compiled',
+            '--heap-pages=4096',
+            '--output=./lib-serml/core/tokens/{pallet_folder}/src/weights.rs',
+            '--template=./templates/module-weight-template.hbs',
+        ].join(' '),
+    },
+    "transactions-module": {
+        title: "Benchmark Runtime Module",
+        branchCommand: [
+            'cargo run --release --color=never',
+            '--bin=setheum-node',
+            '--features=runtime-benchmarks',
+            '--features=with-ethereum-compatibility',
+            '--',
+            'benchmark',
+            '--chain=dev',
+            '--steps=50',
+            '--repeat=20',
+            '--pallet={pallet_name}',
+            '--extrinsic="*"',
+            '--execution=wasm',
+            '--wasm-execution=compiled',
+            '--heap-pages=4096',
+            '--output=./lib-serml/core/transactions/{pallet_folder}/src/weights.rs',
+            '--template=./templates/module-weight-template.hbs',
+        ].join(' '),
+    },
+    "defi-module": {
+        title: "Benchmark Runtime Module",
+        branchCommand: [
+            'cargo run --release --color=never',
+            '--bin=setheum-node',
+            '--features=runtime-benchmarks',
+            '--features=with-ethereum-compatibility',
+            '--',
+            'benchmark',
+            '--chain=dev',
+            '--steps=50',
+            '--repeat=20',
+            '--pallet={pallet_name}',
+            '--extrinsic="*"',
+            '--execution=wasm',
+            '--wasm-execution=compiled',
+            '--heap-pages=4096',
+            '--output=./lib-serml/defi/{pallet_folder}/src/weights.rs',
+            '--template=./templates/module-weight-template.hbs',
+        ].join(' '),
+    },
+    "highend-module": {
+        title: "Benchmark Runtime Module",
+        branchCommand: [
+            'cargo run --release --color=never',
+            '--bin=setheum-node',
+            '--features=runtime-benchmarks',
+            '--features=with-ethereum-compatibility',
+            '--',
+            'benchmark',
+            '--chain=dev',
+            '--steps=50',
+            '--repeat=20',
+            '--pallet={pallet_name}',
+            '--extrinsic="*"',
+            '--execution=wasm',
+            '--wasm-execution=compiled',
+            '--heap-pages=4096',
+            '--output=./lib-serml/defi/highend/{pallet_folder}/src/weights.rs',
+            '--template=./templates/module-weight-template.hbs',
+        ].join(' '),
+    },
+    "qma-module": {
+        title: "Benchmark Runtime Module",
+        branchCommand: [
+            'cargo run --release --color=never',
+            '--bin=setheum-node',
+            '--features=runtime-benchmarks',
+            '--features=with-ethereum-compatibility',
+            '--',
+            'benchmark',
+            '--chain=dev',
+            '--steps=50',
+            '--repeat=20',
+            '--pallet={pallet_name}',
+            '--extrinsic="*"',
+            '--execution=wasm',
+            '--wasm-execution=compiled',
+            '--heap-pages=4096',
+            '--output=./lib-serml/defi/qma/{pallet_folder}/src/weights.rs',
+            '--template=./templates/module-weight-template.hbs',
+        ].join(' '),
+    },
+    "setmint-module": {
+        title: "Benchmark Runtime Module",
+        branchCommand: [
+            'cargo run --release --color=never',
+            '--bin=setheum-node',
+            '--features=runtime-benchmarks',
+            '--features=with-ethereum-compatibility',
+            '--',
+            'benchmark',
+            '--chain=dev',
+            '--steps=50',
+            '--repeat=20',
+            '--pallet={pallet_name}',
+            '--extrinsic="*"',
+            '--execution=wasm',
+            '--wasm-execution=compiled',
+            '--heap-pages=4096',
+            '--output=./lib-serml/defi/setmint/{pallet_folder}/src/weights.rs',
+            '--template=./templates/module-weight-template.hbs',
+        ].join(' '),
+    },
+    "setswap-module": {
+        title: "Benchmark Runtime Module",
+        branchCommand: [
+            'cargo run --release --color=never',
+            '--bin=setheum-node',
+            '--features=runtime-benchmarks',
+            '--features=with-ethereum-compatibility',
+            '--',
+            'benchmark',
+            '--chain=dev',
+            '--steps=50',
+            '--repeat=20',
+            '--pallet={pallet_name}',
+            '--extrinsic="*"',
+            '--execution=wasm',
+            '--wasm-execution=compiled',
+            '--heap-pages=4096',
+            '--output=./lib-serml/defi/setswap/{pallet_folder}/src/weights.rs',
+            '--template=./templates/module-weight-template.hbs',
+        ].join(' '),
+    },
+    "sevm-module": {
+        title: "Benchmark Runtime Module",
+        branchCommand: [
+            'cargo run --release --color=never',
+            '--bin=setheum-node',
+            '--features=runtime-benchmarks',
+            '--features=with-ethereum-compatibility',
+            '--',
+            'benchmark',
+            '--chain=dev',
+            '--steps=50',
+            '--repeat=20',
+            '--pallet={pallet_name}',
+            '--extrinsic="*"',
+            '--execution=wasm',
+            '--wasm-execution=compiled',
+            '--heap-pages=4096',
+            '--output=./lib-serml/sevm/{pallet_folder}/src/weights.rs',
             '--template=./templates/module-weight-template.hbs',
         ].join(' '),
     },
     "setheum": {
-        title: "Benchmark Runtime Setheum Module",
+        title: "Benchmark Runtime Setheum Mainnet Module",
         branchCommand: [
-            'cargo run --release',
-            '--bin=setheum',
+            'cargo run --release --color=never',
+            '--bin=setheum-node',
             '--features=runtime-benchmarks',
-            '--features=with-setheum-runtime',
+            '--features=with-ethereum-compatibility',
             '--',
             'benchmark',
-            '--chain=setheum-latest',
+            '--chain=mainnet',
             '--steps=50',
             '--repeat=20',
             '--pallet={pallet_name}',
@@ -314,40 +506,19 @@ var SetheumRuntimeBenchmarkConfigs = {
             '--wasm-execution=compiled',
             '--heap-pages=4096',
             '--template=./templates/runtime-weight-template.hbs',
-            '--output=./runtime/setheum/src/weights/',
-        ].join(' '),
-    },
-    "neom": {
-        title: "Benchmark Runtime Neom Module",
-        branchCommand: [
-            'cargo run --release',
-            '--bin=setheum',
-            '--features=runtime-benchmarks',
-            '--features=with-neom-runtime',
-            '--',
-            'benchmark',
-            '--chain=neom-latest',
-            '--steps=50',
-            '--repeat=20',
-            '--pallet={pallet_name}',
-            '--extrinsic="*"',
-            '--execution=wasm',
-            '--wasm-execution=compiled',
-            '--heap-pages=4096',
-            '--template=./templates/runtime-weight-template.hbs',
-            '--output=./runtime/neom/src/weights/',
+            '--output=./runtime/src/weights/',
         ].join(' '),
     },
     "newrome": {
-        title: "Benchmark Runtime NewRome Module",
+        title: "Benchmark Runtime Newrome Testnet Module",
         branchCommand: [
-            'cargo run --release',
-            '--bin=setheum',
+            'cargo run --release --color=never',
+            '--bin=setheum-node',
             '--features=runtime-benchmarks',
-            '--features=with-newrome-runtime',
+            '--features=with-ethereum-compatibility',
             '--',
             'benchmark',
-            '--chain=dev',
+            '--chain=testnet',
             '--steps=50',
             '--repeat=20',
             '--pallet={pallet_name}',
@@ -356,13 +527,13 @@ var SetheumRuntimeBenchmarkConfigs = {
             '--wasm-execution=compiled',
             '--heap-pages=4096',
             '--template=./templates/runtime-weight-template.hbs',
-            '--output=./runtime/newrome/src/weights/',
+            '--output=./runtime/src/weights/',
         ].join(' '),
     },
     "custom": {
-        title: "Benchmark Runtime Custom",
-        branchCommand: 'cargo run --release --bin setheum --features runtime-benchmarks -- benchmark',
-    }
+        title: "Benchmark Setheum Runtime Custom",
+        branchCommand: 'cargo run --release --color=never --bin setheum-node --features=with-ethereum-compatibility --features runtime-benchmarks -- benchmark',
+    },
 }
 
 function checkRuntimeBenchmarkCommand(command) {
@@ -415,15 +586,13 @@ async function benchmarkRuntime(app, config) {
             return errorResult(`${config.repo} repo is not supported.`)
         }
 
-        var extra = config.extra.split(" ").slice(1).join(" ").trim();
-
         if (!checkAllowedCharacters(extra)) {
             return errorResult(`Not allowed to use #&|; in the command!`);
         }
 
         // Append extra flags to the end of the command
         let branchCommand = benchConfig.branchCommand;
-        if (task == "custom") {
+        if (task.startsWith("custom")) {
             // extra here should just be raw arguments to add to the command
             branchCommand += " " + extra;
         } else {
@@ -469,7 +638,6 @@ async function benchmarkRuntime(app, config) {
         var { error, stderr } = benchContext.runTask(`git submodule update --init`);
         if (error) return errorResult(stderr);
 
-
         benchConfig.preparationCommand && benchContext.runTask(benchConfig.preparationCommand, 'Preparing...');
 
         // Merge master branch
@@ -495,16 +663,87 @@ async function benchmarkRuntime(app, config) {
                 benchContext.runTask(`git push`, `Pushing commit.`);
             }
         }
-        let report = `Benchmark: **${benchConfig.title}**\n\n` +
-            branchCommand +
-            "\n\n<details>\n<summary>Results</summary>\n\n" +
-            (stdout ? stdout : stderr) +
-            "\n\n </details>";
+        let report = `Benchmark: **${benchConfig.title}**\n\n`
+            + branchCommand
+            + "\n\n<details>\n<summary>Results</summary>\n\n"
+            + (stdout ? stdout : stderr)
+            + "\n\n </details>";
 
         return report;
-    } catch (error) {
+    }
+    catch (error) {
         return errorResult(error.toString());
-    } finally {
+    }
+    finally {
+        release();
+    }
+}
+
+async function benchEVM(app, config) {
+    app.log("Waiting our turn to run benchmark...")
+
+    const release = await mutex.acquire();
+
+    try {
+        var benchContext = new BenchContext(app, config);
+        console.log("Started EVM benchmark");
+        shell.mkdir("-p", "git")
+        shell.cd(cwd + "/git")
+
+        var { error } = benchContext.runTask(`git clone https://github.com/${config.owner}/${config.repo}`, "Cloning git repository...");
+        if (error) {
+            app.log("Git clone failed, probably directory exists...");
+        }
+
+        shell.cd(cwd + `/git/${config.repo}`);
+
+        var { error, stderr } = benchContext.runTask(`git fetch`, "Doing git fetch...");
+        if (error) return errorResult(stderr);
+
+        // Checkout the custom branch
+        var { error, stderr } = benchContext.runTask(`git checkout ${config.branch}`, `Checking out ${config.branch}...`);
+        if (error) {
+            app.log("Git checkout failed, probably some dirt in directory... Will continue with git reset.");
+        }
+
+        var { error, stderr } = benchContext.runTask(`git reset --hard origin/${config.branch}`, `Resetting ${config.branch} hard...`);
+        if (error) return errorResult(stderr);
+
+        var { error, stderr } = benchContext.runTask(`git submodule update --init`);
+        if (error) return errorResult(stderr);
+
+        // Merge master branch
+        var { error, stderr } = benchContext.runTask(`git merge origin/${config.baseBranch}`, `Merging branch ${config.baseBranch}`);
+        if (error) return errorResult(stderr, "merge");
+        if (config.pushToken) {
+            benchContext.runTask(`git push https://${config.pushToken}@github.com/${config.owner}/${config.repo}.git HEAD`, `Pushing merge with pushToken.`);
+        } else {
+            benchContext.runTask(`git push`, `Pushing merge.`);
+        }
+
+        const branchCommand = `make bench-evm`;
+        var { error, stdout, stderr } = benchContext.runTask(branchCommand, `Benching branch: ${config.branch}...`);
+
+        benchContext.runTask(`git add runtime/common/src/gas_to_weight_ratio.rs`, `Adding new files.`);
+        benchContext.runTask(`git commit -m "${branchCommand}"`, `Committing changes.`);
+        if (config.pushToken) {
+            benchContext.runTask(`git push https://${config.pushToken}@github.com/${config.owner}/${config.repo}.git HEAD`, `Pushing commit with pushToken.`);
+        } else {
+            benchContext.runTask(`git push`, `Pushing commit.`);
+        }
+
+        let report = `Benchmark: **EVM**\n\n`
+            + branchCommand
+            + "\n\n<details>\n<summary>Results</summary>\n\n"
+            + (stdout ? stdout : stderr)
+            + "\n\n </details>";
+
+        return report;
+    }
+    catch (error) {
+        return errorResult(error.toString());
+    }
+    finally {
         release();
     }
 }
@@ -512,4 +751,5 @@ async function benchmarkRuntime(app, config) {
 module.exports = {
     benchBranch: benchBranch,
     benchmarkRuntime: benchmarkRuntime,
+    benchEVM: benchEVM,
 };
